@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: white;
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #calculadora table {
+            border-collapse: collapse;
+            height: 700px;
+            width: 500px;
+        }
+
+        #calculadora button,
+        #calculadora input {
+            width: 100%;
+            height: 100%;
+            font-size: 1em;
+            padding: 10px;
+            padding: 15px;
+            color: white;
+            border: none;
+            background-color: rgba(0, 0, 0, .5);
+        }
+
+        #calculadora input:focus {
+            outline: none;
+        }
+
+        #calculadora button {
+            background-color: rgba(0, 0, 0, .4);
+            border: none;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        #calculadora button:hover {
+            background-color: rgba(0, 0, 0, .5);
+        }
+
+        #calculadora button:focus {
+            outline: none;
+        }
+
+        #calculadora button.operacion#restar,
+        #calculadora button.operacion#sumar,
+        #calculadora button.operacion#igual {
+            background-color: hwb(211 29% 22%);
+        }
+
+        #calculadora button.operacion#clear,
+        #calculadora button.operacion#dividir,
+        #calculadora button.operacion#multiplicar {
+            background-color: red;
+        }
+    </style>
+</head>
+<body>
+    <form id="calculadora">
+        <table>
+            <tr>
+                <td colspan="4"><input type="text" readonly id="resultado" style="font-size: xxx-large;"></td>
+            </tr>
+            <tr>
+                <td><button type="button" id="clear" class="operacion">C</button></td>
+                <td><button type="button" id="dividir" class="operacion">/</button></td>
+                <td><button type="button" id="multiplicar" class="operacion">X</button></td>
+                <td rowspan="2"><button type="button" id="restar" class="operacion">-</button></td>
+            </tr>
+            <tr>
+                <td><button type="button">1</button></td>
+                <td><button type="button">2</button></td>
+                <td><button type="button">3</button></td>
+            </tr>
+            <tr>
+                <td><button type="button">4</button></td>
+                <td><button type="button">5</button></td>
+                <td><button type="button">6</button></td>
+                <td rowspan="2"><button type="button" id="sumar" class="operacion">+</button></td>
+            </tr>
+            <tr>
+                <td><button type="button">7</button></td>
+                <td><button type="button">8</button></td>
+                <td><button type="button">9</button></td>
+            </tr>
+            <tr>
+                <td colspan="1"><button type="button">0</button></td>
+                <td colspan="1"><button type="button">.</button></td>
+                <td colspan="2"><button type="button" id="igual" class="operacion">=</button></td>
+            </tr>
+        </table>
+    </form>
+    <script>
+        //Variables
+        const calculadora = document.getElementById('calculadora');
+        const resultado = document.getElementById('resultado');
+        let nums = [];
+        let operaciones = [];
+
+        // Convertir número entero a binario de 32 bits (complemento a 2)
+        function enteroABinario(numero) {
+            return ((numero >>> 0).toString(2)).padStart(32, '0');
+        }
+
+        // Convertir binario de 32 bits (complemento a 2) a entero
+        function binarioAEntero(binario) {
+            if (binario[0] === '1') {
+                let invertido = '';
+                for (let i = 0; i < binario.length; i++) {
+                    invertido += binario[i] === '0' ? '1' : '0';
+                }
+                return -(parseInt(invertido, 2) + 1);
+            } else {
+                return parseInt(binario, 2);
+            }
+        }
+
+        // Convertir número decimal a punto flotante de 32 bits (IEEE 754)
+        function decimalAPuntoFlotante(decimal) {
+            const signo = decimal < 0 ? 1 : 0;
+            const absDecimal = Math.abs(decimal);
+            let exponente = Math.floor(Math.log2(absDecimal)) + 127;
+            let mantisa = (absDecimal / Math.pow(2, exponente - 127)) - 1;
+
+            const exponenteBinario = (exponente >>> 0).toString(2).padStart(8, '0');
+            const mantisaBinaria = Math.round(mantisa * Math.pow(2, 23)).toString(2).padStart(23, '0');
+
+            return (signo << 31) | (exponente << 23) | parseInt(mantisaBinaria, 2);
+        }
+
+        // Convertir punto flotante de 32 bits (IEEE 754) a decimal
+        function puntoFlotanteADecimal(flotante) {
+            const signo = (flotante >> 31) & 1;
+            const exponente = ((flotante >> 23) & 0xFF) - 127;
+            const mantisa = (flotante & 0x7FFFFF) / Math.pow(2, 23);
+
+            return (signo === 1 ? -1 : 1) * (1 + mantisa) * Math.pow(2, exponente);
+        }
+
+        // Mostrar números y operaciones en la pantalla
+        function mostrarNumeros(e) {
+            if (e.target.getAttribute('type') === 'button') {
+                if (e.target.className !== 'operacion') {
+                    resultado.value += e.target.innerText;
+                    nums.push(e.target.innerText);
+                }
+
+                if (e.target.id === 'clear') {
+                    operaciones = [];
+                    nums = [];
+                    resultado.value = '';
+                }
+
+                if (e.target.id === 'sumar') {
+                    operaciones.push(resultado.value);
+                    operaciones.push('+');
+                    resultado.value = '';
+                }
+
+                if (e.target.id === 'restar') {
+                    operaciones.push(resultado.value);
+                    operaciones.push('-');
+                    resultado.value = '';
+                }
+
+                if (e.target.id === 'multiplicar') {
+                    operaciones.push(resultado.value);
+                    operaciones.push('*');
+                    resultado.value = '';
+                }
+
+                if (e.target.id === 'dividir') {
+                    operaciones.push(resultado.value);
+                    operaciones.push('/');
+                    resultado.value = '';
+                }
+
+                if (e.target.id === 'igual') {
+                    operaciones.push(resultado.value);
+                    const resultadoOperacion = calcularResultado(operaciones);
+                    // Mostrar el resultado en pantalla
+                    resultado.value = resultadoOperacion;
+                    operaciones = [];
+                }
+            }
+        }
+
+        // Calcular el resultado de las operaciones
+        function calcularResultado(operaciones) {
+            // Primero, procesamos multiplicaciones y divisiones
+            for (let i = 0; i < operaciones.length; i++) {
+                if (operaciones[i] === '*' || operaciones[i] === '/') {
+                    const num1 = parseFloat(operaciones[i - 1]);
+                    const num2 = parseFloat(operaciones[i + 1]);
+                    let resultadoParcial = 0;
+                    if (operaciones[i] === '*') {
+                        resultadoParcial = num1 * num2;
+                    } else if (operaciones[i] === '/') {
+                        resultadoParcial = num1 / num2;
+                    }
+                    // Reemplazamos los tres elementos (num1, operador, num2) por el resultado
+                    operaciones.splice(i - 1, 3, resultadoParcial);
+                    i -= 1; // Ajustamos el índice después de la eliminación
+                }
+            }
+            // Luego, procesamos sumas y restas
+            let resultadoFinal = parseFloat(operaciones[0]);
+            for (let i = 1; i < operaciones.length; i += 2) {
+                const operador = operaciones[i];
+                const num = parseFloat(operaciones[i + 1]);
+                if (operador === '+') {
+                    resultadoFinal += num;
+                } else if (operador === '-') {
+                    resultadoFinal -= num;
+                }
+            }
+
+            return resultadoFinal;
+        }
+
+        calculadora.addEventListener('click', mostrarNumeros);
+    </script>
+</body>
+</html>
