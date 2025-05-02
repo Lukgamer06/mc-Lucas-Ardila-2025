@@ -1,4 +1,5 @@
 import numpy as np
+from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
 
 # Datos del taller (x1, x2, y)
@@ -95,4 +96,29 @@ plt.legend()
 plt.grid(True)
 
 plt.tight_layout()
+plt.show()
+
+# Gráfica 3D
+
+fig = plt.figure(figsize=(10, 7))
+ax = fig.add_subplot(111, projection='3d')
+
+# Puntos de datos
+ax.scatter(x1, x2, y, color='purple', label='Datos')
+
+# Superficie de regresión
+x1_surf, x2_surf = np.meshgrid(
+    np.linspace(min(x1), max(x1), 100),
+    np.linspace(min(x2), max(x2), 100)
+)
+y_surf = a0 + a1 * x1_surf + a2 * x2_surf
+ax.plot_surface(x1_surf, x2_surf, y_surf, color='cyan', alpha=0.5, label='Superficie de regresión')
+
+# Etiquetas y título
+ax.set_xlabel('x1')
+ax.set_ylabel('x2')
+ax.set_zlabel('y')
+ax.set_title('Regresión múltiple: Gráfica 3D')
+ax.legend()
+
 plt.show()
