@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plt
 
 def lagrange_interpolation(x_points, y_points, x):
     """
@@ -44,11 +45,37 @@ print(f"Interpolación grado 1 (usando puntos x=3 y x=5): {interp_degree1:.4f}")
 print(f"Interpolación grado 2 (usando puntos x=1, x=3 y x=5): {interp_degree2:.4f}")
 print(f"Interpolación grado 3 (usando puntos x=1, x=3, x=5 y x=7): {interp_degree3:.4f}")
 
-# Mostrar polinomios (solo para grados 1 y 2 como pide el problema)
-print("\nPolinomio de grado 1 (usando x=3 y x=5):")
-print(f"P1(x) = (x - 5)/(3 - 5)*0 + (x - 3)/(5 - 3)*(-1)")
-print("Simplificado: P1(x) = 0.5*(x - 3)")
+# Función para graficar
+def graficar_interpolaciones(x_data, y_data, x_to_interpolate, interp_degree1, interp_degree2, interp_degree3):
+    x_range = np.linspace(min(x_data), max(x_data), 500)
+    
+    # Grado 1
+    y_interp1 = [lagrange_interpolation(x_degree1, y_degree1, x) for x in x_range]
+    # Grado 2
+    y_interp2 = [lagrange_interpolation(x_degree2, y_degree2, x) for x in x_range]
+    # Grado 3
+    y_interp3 = [lagrange_interpolation(x_degree3, y_degree3, x) for x in x_range]
+    
+    # Graficar puntos originales
+    plt.scatter(x_data, y_data, color='red', label='Puntos originales')
+    
+    # Graficar interpolaciones
+    plt.plot(x_range, y_interp1, label='Interpolación Grado 1', color='blue')
+    plt.plot(x_range, y_interp2, label='Interpolación Grado 2', color='green')
+    plt.plot(x_range, y_interp3, label='Interpolación Grado 3', color='purple')
+    
+    # Punto interpolado
+    plt.scatter([x_to_interpolate], [interp_degree1], color='blue', marker='x', label='f(4.25) Grado 1')
+    plt.scatter([x_to_interpolate], [interp_degree2], color='green', marker='x', label='f(4.25) Grado 2')
+    plt.scatter([x_to_interpolate], [interp_degree3], color='purple', marker='x', label='f(4.25) Grado 3')
+    
+    # Configuración de la gráfica
+    plt.title("Interpolaciones de Lagrange")
+    plt.xlabel("X")
+    plt.ylabel("Y")
+    plt.legend()
+    plt.grid()
+    plt.show()
 
-print("\nPolinomio de grado 2 (usando x=1, x=3 y x=5):")
-print("P2(x) = (x-3)(x-5)/((1-3)(1-5))*3 + (x-1)(x-5)/((3-1)(3-5))*0 + (x-1)(x-3)/((5-1)(5-3))*(-1)")
-print("Simplificado: P2(x) = 0.375(x-3)(x-5) - 0.125(x-1)(x-3)")
+# Llamar a la función para graficar
+graficar_interpolaciones(x_data, y_data, x_to_interpolate, interp_degree1, interp_degree2, interp_degree3)
